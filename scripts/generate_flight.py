@@ -13,6 +13,7 @@ import numpy as np
 import yaml
 from scipy.spatial.transform import Rotation
 from frames import FT, camera_transform, ecef_to_ned, kinematic_imu, quat_wxyz
+from environment import configure_wind, gust_ned, apply_imu_noise
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -57,10 +58,14 @@ def initialize(config):
         'atmosphere/wind-down-fps': 0,
     }.items():
         f[key] = value
+    configure_wind(f,config)
+    # Solve equilibrium in the steady wind; enable random turbulence afterward.
+    f['atmosphere/turb-type'] = 0
     if not f.run_ic():
         raise RuntimeError('JSBSim initial conditions failed')
     f['propulsion/set-running'] = -1
     f.do_trim(0)
+    configure_wind(f,config)
     if not np.isclose(f.get_delta_t(), 1/config['physics_hz'], atol=1e-12):
         raise RuntimeError('Physics dt mismatch')
     return f
@@ -96,6 +101,8 @@ def generate(config, output):
     p_ecef, r_ecef_body, v_ecef, debug = [], [], [], []
     for step in range(settle + count + 3):
         t = (step-settle)/hz
+        gust = gust_ned(t,config.get('wind',{}))
+        for axis,value in zip(['north','east','down'],gust):f[f'atmosphere/gust-{axis}-fps']=float(value)/FT
         phi, theta = f['attitude/phi-rad'], f['attitude/theta-rad']
         p, q, r = (f[f'velocities/{s}-rad_sec'] for s in 'pqr')
         bank_ref = bank_command(t)
@@ -123,7 +130,9 @@ def generate(config, output):
                           f['fcs/aileron-cmd-norm'], f['fcs/elevator-cmd-norm'],
                           f['fcs/rudder-cmd-norm'], f['fcs/throttle-cmd-norm'],
                           lat, lon, f['position/geod-alt-ft']*FT, p,q,r,
-                          *[f[f'atmosphere/wind-{s}-fps']*FT for s in ['north','east','down']]])
+                          *[f[f'atmosphere/total-wind-{s}-fps']*FT for s in ['north','east','down']],
+                          *[f[f'atmosphere/wind-{s}-fps']*FT for s in ['north','east','down']],
+                          *[f[f'atmosphere/turb-{s}-fps']*FT for s in ['north','east','down']],*gust])
         if not f.run():
             raise RuntimeError(f'JSBSim stopped at {t}s')
     r0 = ecef_to_ned(debug[1][13], debug[1][14])
@@ -148,9 +157,8 @@ def generate(config, output):
     write_csv(output/'groundtruth.csv', 't_ns,px,py,pz,qw,qx,qy,qz,vx,vy,vz', rows(imu_idx,gt))
     write_csv(output/'physics_groundtruth.csv', 't_ns,px,py,pz,qw,qx,qy,qz,vx,vy,vz', rows(range(count+1),gt))
     noise = config['noise']
-    rng = np.random.default_rng(config['seed'])
-    measured_gyro = gyro[imu_idx] + noise['gyro_bias_rad_s'] + rng.normal(0, noise['gyro_white_std_rad_s'], (len(imu_idx),3))
-    measured_force = force[imu_idx] + noise['accel_bias_m_s2'] + rng.normal(0, noise['accel_white_std_m_s2'], (len(imu_idx),3))
+    measured_gyro,measured_force,gyro_bias,accel_bias = apply_imu_noise(
+        gyro[imu_idx],force[imu_idx],noise,config['seed'],1/config['imu_hz'])
     write_csv(output/'imu.csv','t_ns,wx,wy,wz,fx,fy,fz',
               ([int(times[i]),*w,*a] for i,w,a in zip(imu_idx, measured_gyro,measured_force)))
     T = camera_transform(config['camera'])
@@ -158,14 +166,16 @@ def generate(config, output):
     cam_q = quat_wxyz(rotations @ T[:3,:3])
     write_csv(output/'camera_poses.csv','t_ns,px,py,pz,qw,qx,qy,qz',rows(cam_idx,np.column_stack((cam_p,cam_q))))
     write_csv(output/'flight_debug.csv',
-              't_ns,alt_h_sl_m,airspeed_mps,roll_rad,pitch_rad,yaw_rad,alpha_rad,beta_rad,bank_command_rad,aileron_cmd,elevator_cmd,rudder_cmd,throttle_cmd,latitude_rad,longitude_rad,ellipsoid_height_m,p_body_ecef_rad_s,q_body_ecef_rad_s,r_body_ecef_rad_s,wind_n_mps,wind_e_mps,wind_d_mps',
+              't_ns,alt_h_sl_m,airspeed_mps,roll_rad,pitch_rad,yaw_rad,alpha_rad,beta_rad,bank_command_rad,aileron_cmd,elevator_cmd,rudder_cmd,throttle_cmd,latitude_rad,longitude_rad,ellipsoid_height_m,p_body_ecef_rad_s,q_body_ecef_rad_s,r_body_ecef_rad_s,wind_n_mps,wind_e_mps,wind_d_mps,mean_wind_n_mps,mean_wind_e_mps,mean_wind_d_mps,turb_n_mps,turb_e_mps,turb_d_mps,gust_n_mps,gust_e_mps,gust_d_mps',
               rows(range(count+1),debug[:,1:]))
     # EuRoC-like schema; all world/body frame conventions stay NED/FRD.
     write_csv(output/'mav0/imu0/data.csv', '#timestamp [ns],w_RS_S_x [rad s^-1],w_RS_S_y [rad s^-1],w_RS_S_z [rad s^-1],a_RS_S_x [m s^-2],a_RS_S_y [m s^-2],a_RS_S_z [m s^-2]',
               ([int(times[i]),*w,*a] for i,w,a in zip(imu_idx,measured_gyro,measured_force)))
     write_csv(output/'mav0/state_groundtruth_estimate0/data.csv',
               '#timestamp,p_x,p_y,p_z,q_w,q_x,q_y,q_z,v_x,v_y,v_z,b_w_x,b_w_y,b_w_z,b_a_x,b_a_y,b_a_z',
-              ([int(times[i]),*gt[i],*noise['gyro_bias_rad_s'],*noise['accel_bias_m_s2']] for i in imu_idx))
+              ([int(times[i]),*gt[i],*bg,*ba] for i,bg,ba in zip(imu_idx,gyro_bias,accel_bias)))
+    write_csv(output/'imu_bias.csv','t_ns,bgx,bgy,bgz,bax,bay,baz',
+              ([int(times[i]),*bg,*ba] for i,bg,ba in zip(imu_idx,gyro_bias,accel_bias)))
     write_csv(output/'mav0/cam0/data.csv', '#timestamp [ns],filename',
               ([int(times[i]),f'{times[i]}.png'] for i in cam_idx))
     (output/'mav0/cam0/data').mkdir()
@@ -187,7 +197,7 @@ def generate(config, output):
                 'research_ready':False,'CFD_model_applied':False,'model':config['model'],
                 'model_role':config['model_role'],'jsbsim_version':jsbsim.__version__,
                 'model_sha256':sha(model_path),'bundled_xml_sha256':data_hash.hexdigest(),
-                'source_sha256':{name:sha(ROOT/'scripts'/name) for name in ['generate_flight.py','frames.py']},
+                'source_sha256':{name:sha(ROOT/'scripts'/name) for name in ['generate_flight.py','frames.py','environment.py']},
                 'config':config,'trim':trim,'actual_dt_s':f.get_delta_t(),
                 'jsbsim_export_epoch_s':settle/hz,
                 'frames':{'world':'fixed tangent NED at first exported CG position',
@@ -201,7 +211,7 @@ def generate(config, output):
                 'altitude_note':'h-sl initial condition and actual ellipsoid height logged separately; terrain AGL not measured',
                 'counts':{'imu':len(imu_idx),'camera_poses':len(cam_idx),'physics':count+1},
                 'online_inputs':['mav0/cam0','mav0/imu0'],
-                'evaluation_only':['groundtruth.csv','physics_groundtruth.csv','flight_debug.csv','mav0/state_groundtruth_estimate0'],
+                'evaluation_only':['groundtruth.csv','physics_groundtruth.csv','flight_debug.csv','imu_bias.csv','mav0/state_groundtruth_estimate0'],
                 'sha256':{p.name:sha(p) for p in output.glob('*.csv')}}
     (output/'manifest.yaml').write_text(yaml.safe_dump(manifest, sort_keys=False))
     (output/'.flight_incomplete').unlink()

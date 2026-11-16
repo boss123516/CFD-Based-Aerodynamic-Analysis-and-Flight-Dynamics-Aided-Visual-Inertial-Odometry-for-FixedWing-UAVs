@@ -1,0 +1,37 @@
+model: c172p
+model_role: real_3D_map_sensor_acquisition_not_CFD_validated
+duration_s: 12
+settle_s: 5
+physics_hz: 200
+imu_hz: 100
+camera_hz: 10
+seed: 2027
+initial:
+  latitude_deg: 48.578
+  longitude_deg: 7.740
+  altitude_h_sl_m: 440
+  calibrated_airspeed_kts: 90
+  heading_deg: 30
+gravity_mps2: 9.80665
+camera:
+  width: 640
+  height: 480
+  horizontal_fov_deg: 90
+  mount_pitch_deg: -45
+  translation_body_m: [0.0, 0.0, 0.45]
+wind:
+  mean_ned_mps: [2.0, 1.0, 0.0]
+  seed: 2028
+  turbulence:
+    model: dryden_tustin
+    windspeed_20ft_mps: 2.0
+    severity: 1
+  gusts:
+    - {start_s: 5, rise_s: 1, hold_s: 2, fall_s: 1, ned_mps: [0, 1.5, 0]}
+noise:
+  gyro_white_std_rad_s: 0.0005
+  accel_white_std_m_s2: 0.01
+  gyro_bias_rad_s: [0.0001, -0.0001, 0.0001]
+  accel_bias_m_s2: [0.005, -0.005, 0.005]
+  gyro_bias_random_walk_rad_s_sqrt_s: 0.00001
+  accel_bias_random_walk_m_s2_sqrt_s: 0.0001

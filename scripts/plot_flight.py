@@ -5,6 +5,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
+import yaml
 
 parser = argparse.ArgumentParser()
 parser.add_argument('dataset',type=Path)
@@ -27,6 +28,7 @@ for key in ['aileron_cmd','elevator_cmd','rudder_cmd','throttle_cmd']:
     ax[2,1].plot(t,d[key],label=key.removesuffix('_cmd'))
 ax[2,1].set(xlabel='Simulation time [s]',ylabel='Normalized control');ax[2,1].legend()
 for a in ax.flat:a.grid(alpha=.25)
-fig.suptitle('KRoC integration smoke: C172p, no CFD coefficients, no wind')
+manifest = yaml.safe_load((args.dataset/'manifest.yaml').read_text())
+fig.suptitle(f"KRoC JSBSim: {manifest['model']}, CFD={manifest['CFD_model_applied']}, wind/noise in manifest")
 fig.savefig(args.dataset/'flight_overview.png',dpi=150)
 print(args.dataset/'flight_overview.png')

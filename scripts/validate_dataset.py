@@ -42,8 +42,10 @@ def validate(dataset, require_images=False):
     checks['camera_extrinsic_position'] = metrics['camera_position_error_max_m']<1e-8
     checks['camera_extrinsic_rotation'] = metrics['camera_rotation_error_max_rad']<1e-8
     dt = 1/config['imu_hz']
-    force = imu[:,4:7]-config['noise']['accel_bias_m_s2']
-    gyro = imu[:,1:4]-config['noise']['gyro_bias_rad_s']
+    biases = read(dataset/'imu_bias.csv')[:,1:] if (dataset/'imu_bias.csv').exists() else np.tile(
+        [*config['noise']['gyro_bias_rad_s'],*config['noise']['accel_bias_m_s2']],(len(imu),1))
+    force = imu[:,4:7]-biases[:,3:]
+    gyro = imu[:,1:4]-biases[:,:3]
     acceleration = np.einsum('nij,nj->ni',rotation,force)+[0,0,config['gravity_mps2']]
     dv = np.diff(gt[:,8:11],axis=0)-dt*(acceleration[1:]+acceleration[:-1])/2
     gyro_gt = (Rotation.from_matrix(rotation[:-1]).inv()*Rotation.from_matrix(rotation[1:])).as_rotvec()/dt
@@ -69,11 +71,15 @@ def validate(dataset, require_images=False):
         checks['no_incomplete_render'] = not (dataset/'.render_incomplete').exists()
         checks['image_names_match_times'] = {p.stem for p in images}=={str(int(t)) for t in cam[:,0]}
         checks['image_dimensions'] = all(Image.open(p).size==(config['camera']['width'],config['camera']['height']) for p in images)
+    renderer = manifest.get('renderer',{})
+    visual_ready = (require_images and all(checks.values()) and images_present and
+                    all(renderer.get(key,False) for key in ['tile_completion_verified','reprojection_verified','camera_pose_verified']))
+    remaining = ['MSCKF baseline replay and initialization','CFD plant/model validation and A/B/C evaluation']
+    if not visual_ready:
+        remaining[:0] = ['UE/Cesium rendering and tile readiness','intrinsics/reprojection and rotation visual checks']
     report = {'flight_contract_pass':all(checks.values()),'checks':checks,'metrics':metrics,
               'image_count':len(images),'expected_images':expected_count,
-              'visual_dataset_ready':False,
-              'remaining':['UE/Cesium rendering and tile readiness','intrinsics/reprojection and rotation visual checks',
-                           'MSCKF baseline replay and initialization','CFD plant/model validation and A/B/C evaluation']}
+              'visual_dataset_ready':bool(visual_ready),'remaining':remaining}
     (dataset/'validation_report.json').write_text(json.dumps(report,indent=2))
     return report
 

@@ -43,5 +43,15 @@ runs/                    실행 결과 (Git 제외)
 실제 렌더러 연결은 아직 검증 전이며, CFD 모델은 추후 추가한다.
 C 모델이 없으면 실제 실행은 blocked로 기록한다.
 
-출력: `A/`, `B/`, `C/`, `comparison.csv`, `comparison.json`, `trajectories.png`.
+실측 3D 도시 맵으로 영상·IMU 취득 (Strasbourg 항공사진 기반 메시, CesiumJS):
+
+```bash
+bash scripts/setup_map.sh
+./run.sh map --record
+```
+
+화면에서 평균풍·난류·돌풍·IMU 잡음을 설정한다. PNG/IMU/GT는 `datasets/strasbourg_*`에 저장한다.
+이 렌더러는 Unreal과 별개다. 설정·출처·검증: [docs/WIND_NOISE.md](docs/WIND_NOISE.md).
+
+비교 출력: `A/`, `B/`, `C/`, `comparison.csv`, `comparison.json`, `trajectories.png`.
 연결 규약은 [docs/CONTRACTS.md](docs/CONTRACTS.md). 테스트: `./run.sh test`.

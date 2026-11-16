@@ -1,0 +1,8 @@
+name: Strasbourg photogrammetric mesh 2022
+tileset_url: https://s3.eu-west-2.wasabisys.com/ems-sgct-photomaillage/ODACIT/EMS_PM2022/tileset.json
+source: https://data.strasbourg.eu/explore/dataset/photomaillage_portail/information/
+licence: Licence Ouverte v2.0 (Etalab)
+attribution: Ville et Eurométropole de Strasbourg - Données produites avec le soutien du FEDER et de DataGrandEst.
+renderer: CesiumJS 1.124.0 (not Unreal)
+maximum_screen_space_error: 3
+flight_config: strasbourg.yaml

@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KRoC — Strasbourg 3D · JSBSim 데이터 취득</title>
+<link rel="stylesheet" href="/vendor/Widgets/widgets.css">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#11171c;color:#e5eceb;font:15px system-ui,sans-serif}header{padding:20px 28px;border-bottom:1px solid #334247}header h1{font-size:23px;margin:0 0 6px}header p{margin:0;color:#a7bab9}main{display:flex;gap:24px;padding:24px;align-items:flex-start}section{min-width:0}#view{width:640px;height:480px;background:#273743}aside{width:330px}h2{font-size:17px;margin:0 0 14px}label{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px}input,select,button{font:inherit;border:1px solid #536369;border-radius:5px;background:#1c292e;color:inherit;padding:7px}input{width:115px}button{background:#246b60;cursor:pointer;width:100%;margin:9px 0}button:disabled{opacity:.5;cursor:wait}.status{padding:14px 0;border-top:1px solid #334247;margin-top:12px}#progress{width:100%;margin-top:10px}#error{color:#ffb4ab;white-space:pre-wrap}#credit{font-size:12px;color:#b6c8c4;max-width:640px;margin-top:12px}a{color:#81cfc4}.counts{font-size:18px;font-variant-numeric:tabular-nums}#dataset{word-break:break-all;font-size:13px}.cesium-viewer-bottom{display:none}@media(max-width:1050px){main{flex-wrap:wrap}}
+</style><script>window.CESIUM_BASE_URL='/vendor/';</script><script src="/vendor/Cesium.js"></script></head>
+<body><header><h1>Strasbourg · 실측 3D 도시 맵</h1><p>항공사진으로 복원한 텍스처 메시 · JSBSim 비행 / IMU · CesiumJS 렌더러 (Unreal 아님)</p></header>
+<main><section><div id="view"></div><div id="credit"></div><p id="loading">3D 맵을 불러오는 중…</p></section>
+<aside><h2>취득 설정</h2>
+<label>비행 길이 (s)<input id="duration" type="number" value="12" min="0.1" max="120" step="0.1"></label>
+<label>북쪽 바람 (m/s)<input id="windN" type="number" value="2" step="0.5"></label>
+<label>동쪽 바람 (m/s)<input id="windE" type="number" value="1" step="0.5"></label>
+<label>Dryden 난류<select id="turbulence"><option value="dryden_tustin">약한 난류</option><option value="none">끔</option></select></label>
+<label>5초부터 횡돌풍 (m/s)<input id="gust" type="number" value="1.5" step="0.5"></label>
+<label>gyro 표준편차 (rad/s)<input id="gyro" type="number" value="0.0005" step="0.0001" min="0"></label>
+<label>가속도 표준편차 (m/s²)<input id="accel" type="number" value="0.01" step="0.005" min="0"></label>
+<button id="record" disabled>현재 설정으로 데이터 취득</button>
+<div class="status"><div id="phase" role="status">맵 초기화 중</div><progress id="progress" max="100" value="0"></progress><p class="counts" id="counts">영상 0 · IMU 0</p><p id="sample">640×480 · 영상 10 Hz / IMU 100 Hz</p><p id="dataset"></p><p id="error" role="alert"></p></div>
+</aside></main><script src="/app.js"></script></body></html>
