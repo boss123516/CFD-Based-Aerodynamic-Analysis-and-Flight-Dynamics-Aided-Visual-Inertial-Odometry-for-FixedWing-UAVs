@@ -37,9 +37,12 @@ def capture_suite(suite,port=8766,version=1,headless=False,render_only=False,nam
         else:raise TimeoutError('Map server did not start')
         with sync_playwright() as p:
             browser=p.chromium.launch(executable_path='/usr/bin/google-chrome',headless=headless,
-                args=['--no-sandbox','--ignore-gpu-blocklist','--enable-webgl','--window-size=1250,1000',f'--remote-debugging-port={port+458}',
+                args=['--no-sandbox','--enable-gpu','--ignore-gpu-blocklist','--enable-webgl','--window-size=1250,1000',f'--remote-debugging-port={port+458}',
                 '--disable-backgrounding-occluded-windows','--disable-renderer-backgrounding','--disable-background-timer-throttling'])
             page=browser.new_page(viewport={'width':1150,'height':920},device_scale_factor=1)
+            page.set_default_navigation_timeout(120000)
+            summary['gpu_renderer']=page.evaluate('''()=>{const g=document.createElement('canvas').getContext('webgl2');const e=g.getExtension('WEBGL_debug_renderer_info');return g.getParameter(e.UNMASKED_RENDERER_WEBGL);}''')
+            print('GPU renderer:',summary['gpu_renderer'],flush=True)
             page.on('pageerror',lambda error:print('BROWSER ERROR',str(error),flush=True))
             for name in names or ['easy','mid','hard']:
                 dataset=suite/name

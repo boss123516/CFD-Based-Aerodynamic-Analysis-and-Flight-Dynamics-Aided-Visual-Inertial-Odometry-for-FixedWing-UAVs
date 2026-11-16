@@ -204,7 +204,9 @@ class Handler(BaseHTTPRequestHandler):
                 file=ROOT/'renderers/cesium' / ('index.html' if path=='/' else path.lstrip('/'))
                 if not file.resolve().is_relative_to((ROOT/'renderers/cesium').resolve()):raise ValueError('Invalid path')
             return self.send(file.read_bytes(),mimetypes.guess_type(file)[0] or 'application/octet-stream')
-        except Exception as error:self.send({'error':str(error)},status=500)
+        except Exception as error:
+            print('GET failed:',path,repr(error),flush=True)
+            self.send({'error':str(error)},status=500)
 
     def do_POST(self):
         try:

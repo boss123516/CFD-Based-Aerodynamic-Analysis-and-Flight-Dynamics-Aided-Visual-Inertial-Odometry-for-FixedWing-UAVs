@@ -2,15 +2,18 @@
 
 ## Sim
 
-[![Strasbourg 3D flight capture](assets/sim/strasbourg-flight.gif)](assets/sim/strasbourg-flight.mp4)
+| Easy · 완만한 원형 | Mid · 고도·속도 변화 | Hard · 큰 선회·8자 |
+| :---: | :---: | :---: |
+| <img src="assets/sim/easy-30s.gif" width="240" height="180" alt="Easy: 30-second flight excerpt"> | <img src="assets/sim/mid-30s.gif" width="240" height="180" alt="Mid: 30-second flight excerpt"> | <img src="assets/sim/hard-30s.gif" width="240" height="180" alt="Hard: 30-second flight excerpt"> |
 
-[MP4 demo](assets/sim/strasbourg-flight.mp4) · 실측 3D 도시 메시 → CesiumJS 영상 + JSBSim IMU/GT.
-12초 비행에서 영상 121장·IMU 1,201개 취득. 평균풍·돌풍·Dryden 난류·IMU 잡음 설정 가능.
-이 영상은 센서 취득 데모이며, VIO/CFD 성능 결과가 아니다.
+각 **30초 · 1배속**. 같은 Strasbourg 실측 3D 도시 메시와 JSBSim 비행 궤적을 사용한다.
+구간: easy 20–50s / mid 225–255s / hard 309–339s. 전체 데이터셋 취득과 별도로 만든 렌더링 미리보기이며, VIO/CFD 성능 결과가 아니다.
 
 **10분 시나리오:** 같은 Strasbourg 도시 맵에서 easy / mid / hard 순으로 선회·고도·속도 변화를 키운다. 공통 영상 20Hz·IMU 200Hz, ROS1/ROS2 bag과 시간 오프셋 검증: [설정·취득 방법](docs/SCENARIOS.md). CFD는 이번 데이터셋 생성에서 제외한다.
 
 [Map data](https://data.strasbourg.eu/explore/dataset/photomaillage_portail/information/): Ville et Eurométropole de Strasbourg — Données produites avec le soutien du FEDER et de DataGrandEst.
+
+<img src="assets/credits/map-attribution.png" width="640" alt="Map data credits: Strasbourg, European Union FEDER, DataGrandEst">
 
 JSBSim → 센서/영상 → A/B/C → 공통 평가.
 

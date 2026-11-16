@@ -1,0 +1,45 @@
+{
+  "description": "30-second excerpts from 600-second JSBSim scenarios, 1x playback; not VIO/CFD accuracy results",
+  "map": "Strasbourg 2022 public photogrammetry",
+  "scenarios": {
+    "easy": {
+      "start_s": 20,
+      "end_s": 50,
+      "playback_speed": 1,
+      "duration_s": 29.99,
+      "frames": 180,
+      "resolution": [
+        280,
+        210
+      ],
+      "bytes": 6681589,
+      "sha256": "2555344bdf00a01d1f352c2650837c057b05ec948f1bed4e390d2ed0f9704faa"
+    },
+    "mid": {
+      "start_s": 225,
+      "end_s": 255,
+      "playback_speed": 1,
+      "duration_s": 29.99,
+      "frames": 180,
+      "resolution": [
+        280,
+        210
+      ],
+      "bytes": 6620312,
+      "sha256": "8543c8df114897b0863f68104c819b5a3114953d6abe8c7420ae2a71d33eb5b9"
+    },
+    "hard": {
+      "start_s": 309,
+      "end_s": 339,
+      "playback_speed": 1,
+      "duration_s": 29.99,
+      "frames": 180,
+      "resolution": [
+        280,
+        210
+      ],
+      "bytes": 6426688,
+      "sha256": "bf20a3d074c97a7bf0051a5256ae822c12b99411b482c055d7fe955f8d9122b6"
+    }
+  }
+}
