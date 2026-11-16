@@ -92,7 +92,7 @@ def compare(dataset,run_root,statuses,demo=False):
                 entry.update(status='failed',error=str(error))
         report['methods'][name] = entry
     (run_root/'comparison.json').write_text(json.dumps(report,indent=2))
-    keys = ['method','label','status','valid_output_rate','valid_poses','expected_poses',
+    keys = ['method','label','status','demo_only','valid_output_rate','valid_poses','expected_poses',
             'ate_rmse_m','rpe_translation_rmse_m','rpe_rotation_rmse_deg','rpe_pairs','error']
     with (run_root/'comparison.csv').open('w',newline='') as stream:
         writer = csv.DictWriter(stream,fieldnames=keys,extrasaction='ignore');writer.writeheader()

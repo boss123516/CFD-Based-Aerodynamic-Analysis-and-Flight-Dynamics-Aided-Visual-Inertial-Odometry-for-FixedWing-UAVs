@@ -87,6 +87,7 @@ class EndToEndTests(unittest.TestCase):
             self.assertEqual(process.returncode,0,process.stdout+process.stderr)
             report = json.loads((output/'comparison.json').read_text())
             self.assertFalse(report['scientific_result'])
+            self.assertIn('demo_only',(output/'comparison.csv').read_text().splitlines()[0])
             self.assertEqual(set(report['methods']),{'A','B','C'})
             for name in ['A','B','C']:
                 self.assertEqual(report['methods'][name]['status'],'complete')
