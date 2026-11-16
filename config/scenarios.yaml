@@ -1,0 +1,64 @@
+# Same Strasbourg city mesh and sensors; increasing maneuver difficulty.
+map_id: strasbourg_city
+location: {latitude_deg: 48.578, longitude_deg: 7.740, reference_terrain_height_m: 142}
+duration_s: 600
+settle_s: 20
+physics_hz: 200
+imu_hz: 200
+camera_hz: 20
+seed: 2027
+gravity_mps2: 9.80665
+terrain_h_sl_m: 142  # Approximate reference, not measured mesh clearance / AGL.
+camera:
+  width: 640
+  height: 480
+  horizontal_fov_deg: 90
+  mount_pitch_deg: -55
+  translation_body_m: [0.0, 0.0, 0.0]
+wind:
+  mean_ned_mps: [2.0, 1.0, 0.0]
+  seed: 2028
+  turbulence: {model: dryden_tustin, windspeed_20ft_mps: 2.0, severity: 1}
+  gusts:
+    - {start_s: 180, rise_s: 3, hold_s: 5, fall_s: 3, ned_mps: [0, 1.5, 0]}
+    - {start_s: 420, rise_s: 3, hold_s: 5, fall_s: 3, ned_mps: [-1.5, 0, 0]}
+noise:
+  gyro_white_std_rad_s: 0.001
+  accel_white_std_m_s2: 0.02
+  gyro_bias_rad_s: [0.0001, -0.0001, 0.0001]
+  accel_bias_m_s2: [0.005, -0.005, 0.005]
+  gyro_bias_random_walk_rad_s_sqrt_s: 0.00001
+  accel_bias_random_walk_m_s2_sqrt_s: 0.0001
+scenarios:
+  easy:
+    kind: circle
+    north_radius_m: 220
+    east_radius_m: 220
+    speed_mps: 22
+    altitude_h_sl_m: 322
+    bank_limit_deg: 20
+    bank_slew_deg_s: 2
+  mid:
+    kind: ellipse
+    north_radius_m: 300
+    east_radius_m: 200
+    speed_mps: 22
+    speed_amplitude_mps: 1
+    speed_period_s: 100
+    altitude_h_sl_m: 292
+    altitude_amplitude_m: 25
+    altitude_period_s: 150
+    bank_limit_deg: 30
+    bank_slew_deg_s: 5
+  hard:
+    kind: figure_eight
+    north_radius_m: 360
+    east_radius_m: 200
+    speed_mps: 22
+    speed_amplitude_mps: 3
+    speed_period_s: 60
+    altitude_h_sl_m: 262
+    altitude_amplitude_m: 35
+    altitude_period_s: 60
+    bank_limit_deg: 40
+    bank_slew_deg_s: 12

@@ -1,5 +1,6 @@
 const $=id=>document.getElementById(id);
 const state={visible:0,pending:0,processing:0,failures:[],capturing:false};
+window.captureDebug=state;
 window.mapReady=false;
 const viewer=new Cesium.Viewer('view',{animation:false,timeline:false,baseLayerPicker:false,
   geocoder:false,homeButton:false,sceneModePicker:false,navigationHelpButton:false,fullscreenButton:false,
@@ -23,26 +24,40 @@ async function waitTiles(timeout=240000){
     if(state.failures.length)throw new Error('3D tile request failed; preserve incomplete recording and retry after checking the map source');
     await new Promise(resolve=>viewer.scene.postRender.addEventListener(function once(){viewer.scene.postRender.removeEventListener(once);resolve();}));
     if(tileset.tilesLoaded&&state.pending===0&&state.processing===0&&state.visible>0)stable++;else stable=0;
-    if(stable>=8)return;
+    if(stable>=(state.capturing?2:8))return;
     if(!state.capturing)$('loading').textContent=`3D 타일 로딩 · 요청 ${state.pending} · 처리 ${state.processing} · 화면 타일 ${state.visible}`;
-    await pause(40);
+    if(!state.capturing)await pause(40);
   }
   throw new Error(`3D tile load timeout (pending=${state.pending}, processing=${state.processing}, visible=${state.visible})`);
 }
 async function init(){
   settings=await api('/api/config');
+  $('scenario').disabled=!settings.scenario_mode;
+  $('altitude').disabled=!settings.scenario_mode;$('speed').disabled=!settings.scenario_mode;
+  $('duration').value=settings.flight.duration_s;
+  $('altitude').value=settings.flight.initial.altitude_h_sl_m;
+  $('speed').value=settings.flight.trajectory?.speed_mps||settings.flight.initial.calibrated_airspeed_kts*.5144444444444445;
+  $('mapName').textContent=settings.map.name;
+  const flight=settings.flight,aircraft=flight.aircraft;
+  $('aircraftInfo').textContent=aircraft?`${aircraft.name} · 날개폭 ${aircraft.wingspan_m} m · 질량 ${aircraft.mass_kg} kg · 검증 전 가정 모델`:`${flight.model} · 연결 시험 기체`;
+  $('flightInfo').textContent=`${flight.duration_s} s · 영상 ${flight.duration_s*flight.camera_hz+1}장 / ${flight.camera_hz} Hz · IMU ${flight.duration_s*flight.imu_hz+1}개 / ${flight.imu_hz} Hz`;
+  if(settings.statistics)$('flightInfo').textContent+=` · 실제 비행 평균 ${settings.statistics.mean_airspeed_mps.toFixed(1)} / 최대 ${settings.statistics.max_airspeed_mps.toFixed(1)} m/s`;
+  if(settings.scenario_mode){$('duration').value=600;$('duration').min=600;}
   $('credit').textContent=settings.map.attribution;
-  tileset=await Cesium.Cesium3DTileset.fromUrl('/tiles/tileset.json',{
-    maximumScreenSpaceError:6,
+  tileset=await Cesium.Cesium3DTileset.fromUrl(settings.map.local_tileset_url||'/tiles/tileset.json',{
+    maximumScreenSpaceError:settings.map.maximum_screen_space_error,
     dynamicScreenSpaceError:false,skipLevelOfDetail:false,preloadWhenHidden:false,
-    cacheBytes:512*1024*1024,maximumCacheOverflowBytes:256*1024*1024});
+    cacheBytes:2*1024*1024*1024,maximumCacheOverflowBytes:1024*1024*1024});
   viewer.scene.primitives.add(tileset);window.tileset=tileset;
   tileset.loadProgress.addEventListener((pending,processing)=>{state.pending=pending;state.processing=processing;});
   tileset.tileFailed.addEventListener(error=>{state.failures.push(error);console.error('TILE FAILED',JSON.stringify(error));});
   viewer.scene.preUpdate.addEventListener(()=>state.visible=0);
   tileset.tileVisible.addEventListener(()=>state.visible++);
   const ic=settings.flight.initial;
-  viewer.camera.setView({destination:Cesium.Cartesian3.fromDegrees(ic.longitude_deg,ic.latitude_deg,ic.altitude_h_sl_m+150),
+  let prepared=null;
+  try{prepared=await api('/api/poses');}catch(error){/* Interactive preview has no prepared flight. */}
+  if(prepared)setPose(prepared.poses[prepared.start_index||0],prepared.origin,prepared.config.camera);
+  else viewer.camera.setView({destination:Cesium.Cartesian3.fromDegrees(ic.longitude_deg,ic.latitude_deg,ic.altitude_h_sl_m+150),
     orientation:{heading:Cesium.Math.toRadians(30),pitch:Cesium.Math.toRadians(-55),roll:0}});
   await waitTiles();window.mapReady=true;
   $('loading').textContent='실측 3D 메시 준비됨 · 마우스로 회전 / 확대할 수 있습니다.';
@@ -81,7 +96,7 @@ async function capture(){
   try{
     tileset.maximumScreenSpaceError=settings.map.maximum_screen_space_error;
     const data=await api('/api/poses');
-    for(let index=0;index<data.poses.length;index++){
+    for(let index=data.start_index||0;index<data.poses.length;index++){
       const row=data.poses[index],pose=setPose(row,data.origin,data.config.camera);
       $('phase').textContent=`3D 맵 렌더링 · 시뮬레이션 ${(row[0]/1e9).toFixed(1)} s`;
       await waitTiles();
@@ -92,7 +107,7 @@ async function capture(){
       const result=await api(`/api/frame?t_ns=${row[0]}`,{method:'POST',headers:{'Content-Type':'image/png','X-Capture-Metadata':JSON.stringify(meta)},body:blob});
       $('counts').textContent=`영상 ${result.captured}/${data.poses.length} · IMU ${data.config.duration_s*data.config.imu_hz+1}`;
       $('progress').value=100*result.captured/data.poses.length;
-      $('sample').textContent=`특징점 ${result.features} · PNG 저장 중 · 10 Hz 시뮬레이션 시각`;
+      $('sample').textContent=`FAST20 ${result.fast20} · Shi–Tomasi ${result.features} (상한 1000) · ${data.config.camera_hz}/${data.config.imu_hz} Hz`;
     }
     $('phase').textContent='취득 완료 — 실제 3D 맵 영상 + JSBSim IMU';
     $('loading').textContent='완료 · 데이터셋에 PNG, IMU, GT, calibration 및 검증 보고서를 저장했습니다.';
@@ -104,19 +119,23 @@ async function capture(){
 }
 $('record').onclick=async()=>{
   try{
-    const params={duration_s:+$('duration').value,mean_ned_mps:[+$('windN').value,+$('windE').value,0],
+    const params={scenario:$('scenario').value,altitude_h_sl_m:+$('altitude').value,speed_mps:+$('speed').value,
+      duration_s:+$('duration').value,mean_ned_mps:[+$('windN').value,+$('windE').value,0],
       turbulence:{model:$('turbulence').value,severity:1,windspeed_20ft_mps:2},
       gusts:[{start_s:5,rise_s:1,hold_s:2,fall_s:1,ned_mps:[0,+$('gust').value,0]}],
       gyro_white_std_rad_s:+$('gyro').value,accel_white_std_m_s2:+$('accel').value};
     $('record').disabled=true;await api('/api/start',{method:'POST',body:JSON.stringify(params)});
+    if(settings.scenario_mode)location.reload();
   }catch(error){$('error').textContent=String(error);$('record').disabled=false;}
 };
+$('scenario').onchange=()=>{const p=settings.scenarios[$('scenario').value];$('altitude').value=p.altitude_h_sl_m;$('speed').value=p.speed_mps;};
 setInterval(async()=>{
   try{const s=await api('/api/status');
     if(s.dataset)$('dataset').textContent=s.dataset;
     if(s.phase==='generating')$('phase').textContent='JSBSim 비행 · IMU/GT 생성 중';
-    if(s.phase==='flight_ready'&&!state.capturing)capture();
+    if(s.phase==='flight_ready'&&window.mapReady&&!state.capturing&&!new URLSearchParams(location.search).has('preview'))capture();
     if(s.phase==='failed'){$('error').textContent=s.error;$('record').disabled=false;}
   }catch(error){console.error(error);}
 },1000);
-init().catch(error=>{$('error').textContent=String(error);$('phase').textContent='맵 로딩 실패';console.error(error);});
+init().catch(async error=>{$('error').textContent=String(error);$('phase').textContent='맵 로딩 실패';
+  await api('/api/fail',{method:'POST',body:JSON.stringify({error:String(error)})}).catch(()=>{});console.error(error);});

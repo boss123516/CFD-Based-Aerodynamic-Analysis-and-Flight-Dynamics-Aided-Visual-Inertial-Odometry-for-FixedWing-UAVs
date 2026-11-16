@@ -6,13 +6,15 @@ import subprocess
 
 PROTECTED_SUFFIXES={'.step','.stp','.stl','.iges','.igs','.3mf','.obj','.ply','.glb','.gltf',
                     '.blend','.fcstd','.f3d','.zip','.7z','.rar','.tar','.tgz'}
-PROTECTED_DIRECTORIES=('private/','aircraft_private/','cfd/private/','cfd/models/')
+PROTECTED_DIRECTORIES=('private/','aircraft_private/','cfd/private/','cfd/models/','datasets/','runs/')
 AIRCRAFT_ALLOWED={'sim/aircraft/.gitkeep','sim/aircraft/README.md'}
 
 
 def prohibited(path):
     normalized=path.lower()
     return (PurePosixPath(normalized).suffix in PROTECTED_SUFFIXES or
+            '.private.' in normalized or '/private_model/' in normalized or
+            PurePosixPath(normalized).suffix in {'.bag','.db3','.mcap'} or
             any(normalized.startswith(p) for p in PROTECTED_DIRECTORIES) or
             (normalized.startswith('sim/aircraft/') and path not in AIRCRAFT_ALLOWED))
 

@@ -1,0 +1,10 @@
+strasbourg_city:
+  name: Strasbourg city photogrammetric mesh 2022, France
+  kind: photogrammetry
+  tileset_url: https://s3.eu-west-2.wasabisys.com/ems-sgct-photomaillage/ODACIT/EMS_PM2022/tileset.json
+  source: https://data.strasbourg.eu/explore/dataset/photomaillage_portail/information/
+  licence: Licence Ouverte v2.0 (Etalab)
+  attribution: Ville et Eurométropole de Strasbourg - Données produites avec le soutien
+    du FEDER et de DataGrandEst.
+  maximum_screen_space_error: 8
+  reference_terrain_height_m: 142

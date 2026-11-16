@@ -5,10 +5,15 @@
 <style>
 *{box-sizing:border-box}body{margin:0;background:#11171c;color:#e5eceb;font:15px system-ui,sans-serif}header{padding:20px 28px;border-bottom:1px solid #334247}header h1{font-size:23px;margin:0 0 6px}header p{margin:0;color:#a7bab9}main{display:flex;gap:24px;padding:24px;align-items:flex-start}section{min-width:0}#view{width:640px;height:480px;background:#273743}aside{width:330px}h2{font-size:17px;margin:0 0 14px}label{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px}input,select,button{font:inherit;border:1px solid #536369;border-radius:5px;background:#1c292e;color:inherit;padding:7px}input{width:115px}button{background:#246b60;cursor:pointer;width:100%;margin:9px 0}button:disabled{opacity:.5;cursor:wait}.status{padding:14px 0;border-top:1px solid #334247;margin-top:12px}#progress{width:100%;margin-top:10px}#error{color:#ffb4ab;white-space:pre-wrap}#credit{font-size:12px;color:#b6c8c4;max-width:640px;margin-top:12px}a{color:#81cfc4}.counts{font-size:18px;font-variant-numeric:tabular-nums}#dataset{word-break:break-all;font-size:13px}.cesium-viewer-bottom{display:none}@media(max-width:1050px){main{flex-wrap:wrap}}
 </style><script>window.CESIUM_BASE_URL='/vendor/';</script><script src="/vendor/Cesium.js"></script></head>
-<body><header><h1>Strasbourg · 실측 3D 도시 맵</h1><p>항공사진으로 복원한 텍스처 메시 · JSBSim 비행 / IMU · CesiumJS 렌더러 (Unreal 아님)</p></header>
+<body><header><h1 id="mapName">Strasbourg 실측 3D 도시 맵</h1><p>항공사진 기반 텍스처 메시 · JSBSim 비행 / IMU · CesiumJS</p></header>
 <main><section><div id="view"></div><div id="credit"></div><p id="loading">3D 맵을 불러오는 중…</p></section>
 <aside><h2>취득 설정</h2>
-<label>비행 길이 (s)<input id="duration" type="number" value="12" min="0.1" max="120" step="0.1"></label>
+<p id="aircraftInfo" style="font-size:12px;color:#a7bab9"></p>
+<p id="flightInfo" style="font-size:12px;color:#a7bab9"></p>
+<label>기동<select id="scenario"><option value="easy">easy · 완만한 원형</option><option value="mid">mid · 고도/속도 변화</option><option value="hard">hard · 큰 선회 / 8자</option></select></label>
+<label>고도 h-sl (m)<input id="altitude" type="number" value="440" step="10"></label>
+<label>기준 대기속도 (m/s)<input id="speed" type="number" value="22" step="1"></label>
+<label>비행 길이 (s)<input id="duration" type="number" value="12" min="0.1" max="3600" step="0.1"></label>
 <label>북쪽 바람 (m/s)<input id="windN" type="number" value="2" step="0.5"></label>
 <label>동쪽 바람 (m/s)<input id="windE" type="number" value="1" step="0.5"></label>
 <label>Dryden 난류<select id="turbulence"><option value="dryden_tustin">약한 난류</option><option value="none">끔</option></select></label>

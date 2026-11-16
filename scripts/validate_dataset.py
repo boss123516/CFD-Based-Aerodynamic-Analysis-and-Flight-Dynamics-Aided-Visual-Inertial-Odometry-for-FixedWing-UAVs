@@ -33,11 +33,12 @@ def validate(dataset, require_images=False):
     rotation = matrix_wxyz(gt[:,4:8])
     calibration = yaml.safe_load((dataset/'calibration.yaml').read_text())
     extrinsic = np.asarray(calibration['T_IC'])
-    indices = np.searchsorted(gt[:,0],cam[:,0])
-    expected_position = gt[indices,1:4]+np.einsum('nij,j->ni',rotation[indices],extrinsic[:3,3])
+    indices = np.searchsorted(physics[:,0],cam[:,0])
+    camera_body_rotation=matrix_wxyz(physics[indices,4:8])
+    expected_position = physics[indices,1:4]+np.einsum('nij,j->ni',camera_body_rotation,extrinsic[:3,3])
     metrics['camera_position_error_max_m'] = float(np.max(np.linalg.norm(expected_position-cam[:,1:4],axis=1)))
     camera_rotation = matrix_wxyz(cam[:,4:8])
-    expected_rotation = rotation[indices] @ extrinsic[:3,:3]
+    expected_rotation = camera_body_rotation @ extrinsic[:3,:3]
     metrics['camera_rotation_error_max_rad'] = float(Rotation.from_matrix(np.swapaxes(expected_rotation,1,2) @ camera_rotation).magnitude().max())
     checks['camera_extrinsic_position'] = metrics['camera_position_error_max_m']<1e-8
     checks['camera_extrinsic_rotation'] = metrics['camera_rotation_error_max_rad']<1e-8
@@ -70,7 +71,9 @@ def validate(dataset, require_images=False):
         checks['all_images_present'] = images_present
         checks['no_incomplete_render'] = not (dataset/'.render_incomplete').exists()
         checks['image_names_match_times'] = {p.stem for p in images}=={str(int(t)) for t in cam[:,0]}
-        checks['image_dimensions'] = all(Image.open(p).size==(config['camera']['width'],config['camera']['height']) for p in images)
+        def correct_dimensions(path):
+            with Image.open(path) as image:return image.size==(config['camera']['width'],config['camera']['height'])
+        checks['image_dimensions'] = all(correct_dimensions(p) for p in images)
     renderer = manifest.get('renderer',{})
     visual_ready = (require_images and all(checks.values()) and images_present and
                     all(renderer.get(key,False) for key in ['tile_completion_verified','reprojection_verified','camera_pose_verified']))

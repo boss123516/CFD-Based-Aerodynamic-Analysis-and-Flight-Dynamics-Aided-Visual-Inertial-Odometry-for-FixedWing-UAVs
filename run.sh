@@ -11,6 +11,10 @@ case "${1:-help}" in
   render) shift; exec .venv/bin/python scripts/render_airsim.py "$@" ;;
   pipeline) shift; exec .venv/bin/python scripts/pipeline.py "$@" ;;
   map) shift; exec bash scripts/run_map.sh "$@" ;;
+  scenarios) shift; exec .venv/bin/python scripts/scenarios.py "$@" ;;
+  capture-scenarios) shift; exec .venv/bin/python scripts/capture_scenarios.py "$@" ;;
+  bag) shift; exec .venv/bin/python scripts/export_bag.py "$@" ;;
+  status) shift; exec .venv/bin/python scripts/dataset_status.py "$@" ;;
   test) shift; .venv/bin/python scripts/test_sensor_contract.py; exec .venv/bin/python -m unittest discover -s tests -v "$@" ;;
-  *) echo 'Usage: ./run.sh {generate|render|validate|plot|pipeline {demo|run|evaluate}|map [--record]|test} [options]' ;;
+  *) echo 'Usage: ./run.sh {generate|render|validate|plot|pipeline|map|scenarios|capture-scenarios|bag|status|test} [options]' ;;
 esac

@@ -36,3 +36,8 @@ cfd/models/
 *.rar
 *.tar
 *.tgz
+*.private.*
+*.bag
+*.db3
+*.mcap
+*.incomplete

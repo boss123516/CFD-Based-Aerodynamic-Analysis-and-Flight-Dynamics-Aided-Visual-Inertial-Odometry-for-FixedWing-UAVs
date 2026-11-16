@@ -8,6 +8,8 @@
 12초 비행에서 영상 121장·IMU 1,201개 취득. 평균풍·돌풍·Dryden 난류·IMU 잡음 설정 가능.
 이 영상은 센서 취득 데모이며, VIO/CFD 성능 결과가 아니다.
 
+**10분 시나리오:** 같은 Strasbourg 도시 맵에서 easy / mid / hard 순으로 선회·고도·속도 변화를 키운다. 공통 영상 20Hz·IMU 200Hz, ROS1/ROS2 bag과 시간 오프셋 검증: [설정·취득 방법](docs/SCENARIOS.md). CFD는 이번 데이터셋 생성에서 제외한다.
+
 [Map data](https://data.strasbourg.eu/explore/dataset/photomaillage_portail/information/): Ville et Eurométropole de Strasbourg — Données produites avec le soutien du FEDER et de DataGrandEst.
 
 JSBSim → 센서/영상 → A/B/C → 공통 평가.
