@@ -1,4 +1,14 @@
-# KRoC Fixed-Wing VIO Sim
+# CFD-Based Aerodynamic Analysis and Flight-Dynamics-Aided Visual-Inertial Odometry for Fixed-Wing UAVs
+
+## Sim
+
+[![Strasbourg 3D flight capture](assets/sim/strasbourg-flight.gif)](assets/sim/strasbourg-flight.mp4)
+
+[MP4 demo](assets/sim/strasbourg-flight.mp4) · 실측 3D 도시 메시 → CesiumJS 영상 + JSBSim IMU/GT.
+12초 비행에서 영상 121장·IMU 1,201개 취득. 평균풍·돌풍·Dryden 난류·IMU 잡음 설정 가능.
+이 영상은 센서 취득 데모이며, VIO/CFD 성능 결과가 아니다.
+
+[Map data](https://data.strasbourg.eu/explore/dataset/photomaillage_portail/information/): Ville et Eurométropole de Strasbourg — Données produites avec le soutien du FEDER et de DataGrandEst.
 
 JSBSim → 센서/영상 → A/B/C → 공통 평가.
 
@@ -55,3 +65,7 @@ bash scripts/setup_map.sh
 
 비교 출력: `A/`, `B/`, `C/`, `comparison.csv`, `comparison.json`, `trajectories.png`.
 연결 규약은 [docs/CONTRACTS.md](docs/CONTRACTS.md). 테스트: `./run.sh test`.
+
+## Research aircraft
+
+SUPER STINGRAY를 연구 기체로 준비한다. 유료 CAD·제작 파일·치수·기체별 공력/동역학 데이터는 별도 비공개 작업 공간에 보관한다. 이 저장소에는 시뮬레이터 코드와 공개가 허용된 이미지·영상만 포함한다. 기체별 CFD/비행 모델 검증은 아직 진행 전이다.
