@@ -1,0 +1,5 @@
+aircraft_id: plumbing_demo_not_an_aircraft_model
+demo_only: true
+provenance: hand_written_toy_values_NOT_CFD
+calibration_split: no_real_calibration_plumbing_only
+sigma_floor_rad: 0.02

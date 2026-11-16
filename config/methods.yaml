@@ -1,0 +1,19 @@
+# One sensor recording, three estimator settings. Commands are argv lists.
+# Example: ["/path/to/runner", "--input", "{input}", "--output", "{output}", "--config", "{config}"]
+A:
+  label: baseline
+  command: null
+  dynamics: {enabled: false}
+  cfd: {enabled: false}
+B:
+  label: dynamics_aided
+  command: null
+  dynamics: {enabled: true, beta_ref_rad: 0.0, sigma_beta_rad: 0.1, min_speed_mps: 5.0}
+  cfd: {enabled: false}
+C:
+  label: cfd_informed
+  command: null
+  dynamics: {enabled: true, beta_ref_rad: 0.0, sigma_beta_rad: 0.1, min_speed_mps: 5.0}
+  cfd:
+    enabled: true
+    model: null  # Directory with metadata.yaml + beta_lut.csv; no GT input.

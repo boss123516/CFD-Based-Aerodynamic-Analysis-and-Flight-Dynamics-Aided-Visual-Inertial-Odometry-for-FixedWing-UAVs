@@ -1,0 +1,26 @@
+model: c172p
+model_role: integration_smoke_only_not_CFD_aircraft
+duration_s: 60
+settle_s: 5
+physics_hz: 200
+imu_hz: 100
+camera_hz: 10
+seed: 2027
+initial:
+  latitude_deg: 37.599805
+  longitude_deg: 126.865261
+  altitude_h_sl_m: 300
+  calibrated_airspeed_kts: 90
+  heading_deg: 0
+gravity_mps2: 9.80665
+camera:
+  width: 640
+  height: 480
+  horizontal_fov_deg: 90
+  mount_pitch_deg: -45
+  translation_body_m: [0.0, 0.0, 0.45]
+noise:
+  gyro_white_std_rad_s: 0.0
+  accel_white_std_m_s2: 0.0
+  gyro_bias_rad_s: [0.0, 0.0, 0.0]
+  accel_bias_m_s2: [0.0, 0.0, 0.0]

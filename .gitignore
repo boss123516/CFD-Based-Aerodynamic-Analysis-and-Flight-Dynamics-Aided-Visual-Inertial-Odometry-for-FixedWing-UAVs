@@ -1,0 +1,11 @@
+.venv/
+external/
+datasets/
+__pycache__/
+*.pyc
+runs/
+reports/
+docs/CFD_READINESS.md
+.env
+.env.*
+!.env.example
